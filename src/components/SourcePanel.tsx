@@ -5,16 +5,17 @@ import { ExternalLink, BookOpen } from 'lucide-react';
 interface Source {
   title: string;
   url: string;
-  domain: string;
-  published_date: string;
-  relevance_score: number;
+  domain?: string;
+  published_date?: string;
+  relevance_score?: number;
+  relevance?: string;
 }
 
 interface Props {
   sources: Source[];
 }
 
-export function SourcePanel({ sources }: Props) {
+export const SourcePanel: React.FC<Props> = ({ sources }) => {
   if (!sources || sources.length === 0) return null;
 
   return (
@@ -25,26 +26,41 @@ export function SourcePanel({ sources }: Props) {
       </h3>
       
       <div className={styles.grid}>
-        {sources.map((source, idx) => (
-          <div key={idx} className={`glass-panel ${styles.sourceCard}`}>
-            <div className={styles.cardHeader}>
-              <span className={styles.domain}>{source.domain}</span>
-              <span className={styles.score}>{Math.round(source.relevance_score * 100)}% Match</span>
-            </div>
+        {sources.map((source, idx) => {
+          let matchPercent = 50;
+          if (source.relevance_score) {
+            matchPercent = Math.round(source.relevance_score * 100);
+          } else if (source.relevance === 'high') {
+            matchPercent = 95;
+          } else if (source.relevance === 'medium') {
+            matchPercent = 75;
+          } else if (source.relevance === 'low') {
+            matchPercent = 45;
+          }
+
+          const domain = source.domain || (source.url ? new URL(source.url).hostname : 'unknown');
+
+          return (
+            <div key={idx} className={`glass-panel ${styles.sourceCard}`}>
+              <div className={styles.cardHeader}>
+                <span className={styles.domain}>{domain}</span>
+                <span className={styles.score}>{matchPercent}% Match</span>
+              </div>
             
-            <h4 className={styles.title}>{source.title}</h4>
+              <h4 className={styles.title}>{source.title}</h4>
             
-            <div className={styles.footer}>
-              <span className={styles.date}>
-                {source.published_date ? new Date(source.published_date).toLocaleDateString() : 'Unknown Date'}
-              </span>
-              
-              <a href={source.url} target="_blank" rel="noopener noreferrer" className={styles.openBtn}>
-                Open Source <ExternalLink size={14} />
-              </a>
+              <div className={styles.footer}>
+                <span className={styles.date}>
+                  {source.published_date ? new Date(source.published_date).toLocaleDateString() : 'Unknown Date'}
+                </span>
+                
+                <a href={source.url} target="_blank" rel="noopener noreferrer" className={styles.openBtn}>
+                  Open Source <ExternalLink size={14} />
+                </a>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

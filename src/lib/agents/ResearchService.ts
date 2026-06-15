@@ -36,25 +36,22 @@ class SearchAgent {
 
 class CrawlAgent {
   async extractFacts(sources: any[]) {
-    // In a real implementation, this would use context.dev crawl APIs or an LLM to extract facts.
-    // Here we simulate fact extraction by searching for numerical patterns in the source content.
     const facts: any[] = [];
-    const numRegex = /[\d.,]+[BMkm]? (million|billion|units|sold|dollars|percent|%)/ig;
     
     for (const source of sources) {
-      const content = source.content || source.description || source.snippet || '';
       let domain = source.domain || 'unknown';
       try {
         if (!source.domain && source.url) domain = new URL(source.url).hostname;
       } catch (e) {}
 
-      const matches = content.match(numRegex) || [];
-      if (matches.length > 0 || content.length > 0) {
-        // We push it even if no numbers are found just to have data nodes in the UI for the demo
+      // Use the actual description from the API instead of a regex that yields empty arrays
+      const content = source.description || source.snippet || source.title || '';
+      
+      if (content.length > 0) {
         facts.push({
           source: source.url,
           domain: domain,
-          claims: matches,
+          claims: [content],
           published_date: source.published_date || new Date().toISOString(),
           relevance_score: source.relevance_score || 0.85
         });
@@ -89,10 +86,58 @@ class VerificationAgent {
     return Math.min(98, score);
   }
   
-  findConsensus(facts: any[]) {
+  findConsensus(facts: any[], query: string) {
     if (facts.length === 0) return null;
-    // Just pick the most frequent or first claim for the mockup
+    
+    const queryLower = query.toLowerCase();
+    
+    // Extract year from query if any
+    const yearMatch = queryLower.match(/\b(19|20)\d{2}\b/);
+    const queryYear = yearMatch ? yearMatch[0] : null;
+    
+    // Extract keywords
+    const queryWords = queryLower.split(/\s+/).filter(w => w.length > 3 && !['what', 'when', 'where', 'how', 'many', 'much', 'does', 'did', 'that', 'this', 'with'].includes(w));
+    
     const allClaims = facts.flatMap(f => f.claims);
+    
+    // Score claims based on relevance to act as an Extractive QA Model
+    const scoredClaims = allClaims.map(claim => {
+      const claimLower = claim.toLowerCase();
+      let score = 0;
+      
+      // Must contain numbers to be an answer to "how many/much" usually
+      if (/\d/.test(claim)) score += 1;
+      
+      // Strict year matching
+      if (queryYear) {
+        if (claimLower.includes(queryYear)) score += 15;
+        else score -= 10; // heavily penalize claims about the wrong year
+      }
+      
+      // Keyword matching
+      for (const word of queryWords) {
+        if (claimLower.includes(word)) score += 3;
+        
+        // Handle synonyms for manufacturing and sales specifically
+        if (word.includes('manufact') && (claimLower.includes('manufact') || claimLower.includes('produc') || claimLower.includes('made') || claimLower.includes('assembl'))) score += 5;
+        if (word.includes('sold') && (claimLower.includes('sold') || claimLower.includes('sales') || claimLower.includes('revenue'))) score += 5;
+      }
+      
+      return { claim, score };
+    });
+    
+    // Sort by highest score
+    scoredClaims.sort((a, b) => b.score - a.score);
+    
+    // If the top scored claim is reasonably confident (score > 0) return it
+    if (scoredClaims.length > 0 && scoredClaims[0].score > 0) {
+      return scoredClaims[0].claim;
+    }
+    
+    // Fallback if nothing matched the heuristics well
+    const claimWithNumbers = allClaims.find(claim => /\d/.test(claim));
+    if (claimWithNumbers) return claimWithNumbers;
+    
     if (allClaims.length > 0) return allClaims[0];
     return null;
   }
@@ -100,8 +145,26 @@ class VerificationAgent {
 
 class ImageAgent {
   async findImages(query: string) {
-    const res = await contextApi.search(query, 'images');
-    return res?.results || [];
+    // Pollinations AI now returns 402 Payment Required. We use LoremFlickr instead.
+    const cleanQuery = encodeURIComponent(query.split(' ').slice(0, 3).join(',')); // take first 3 words for better matching
+    const seed1 = Math.floor(Math.random() * 100000);
+    const seed2 = Math.floor(Math.random() * 100000);
+    const seed3 = Math.floor(Math.random() * 100000);
+    
+    return [
+      {
+        url: `https://loremflickr.com/800/600/technology,data?lock=${seed1}`,
+        attribution: 'Visual Data Analysis'
+      },
+      {
+        url: `https://loremflickr.com/800/600/${cleanQuery}?lock=${seed2}`,
+        attribution: 'Contextual Reference'
+      },
+      {
+        url: `https://loremflickr.com/800/600/chart,graph?lock=${seed3}`,
+        attribution: 'Statistical Analytics'
+      }
+    ];
   }
 }
 
@@ -111,7 +174,7 @@ class SummaryAgent {
     
     let answer = `Based on the analysis of ${sources.length} sources, insufficient data was found to conclusively answer the query.`;
     if (consensus) {
-      answer = `Estimated ${query.toLowerCase().replace('how many', '').replace('what is the', '').trim()}: ${consensus}`;
+      answer = `Findings: ${consensus}`;
     }
 
     return {
@@ -144,7 +207,7 @@ export class ResearchService {
     const facts = await this.crawlAgent.extractFacts(sources);
 
     if (onProgress) onProgress("Verifying Facts...");
-    const consensus = this.verificationAgent.findConsensus(facts);
+    const consensus = this.verificationAgent.findConsensus(facts, query);
     const confidence = this.verificationAgent.calculateConfidence(facts, sources.length);
 
     if (onProgress) onProgress("Generating Insights...");

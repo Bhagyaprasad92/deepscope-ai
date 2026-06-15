@@ -11,7 +11,33 @@ interface Props {
   images: Image[];
 }
 
-export function ImageGallery({ images }: Props) {
+const ImageWithFallback = ({ src, alt, attribution }: { src: string; alt: string; attribution: string }) => {
+  const [error, setError] = React.useState(false);
+
+  return (
+    <div className={styles.imageWrapper}>
+      {error ? (
+        <div className={styles.image} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-hud)', color: 'var(--text-dim)' }}>
+          Image unavailable
+        </div>
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img 
+          src={`/api/image-proxy?url=${encodeURIComponent(src)}`} 
+          alt={alt} 
+          className={styles.image}
+          loading="lazy" 
+          onError={() => setError(true)}
+        />
+      )}
+      <div className={styles.attribution}>
+        Source: {attribution}
+      </div>
+    </div>
+  );
+};
+
+export const ImageGallery: React.FC<Props> = ({ images }) => {
   if (!images || images.length === 0) return null;
 
   return (
@@ -23,18 +49,7 @@ export function ImageGallery({ images }: Props) {
       
       <div className={styles.grid}>
         {images.map((img, idx) => (
-          <div key={idx} className={styles.imageWrapper}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={img.url} 
-              alt="Related visualization" 
-              className={styles.image}
-              loading="lazy" 
-            />
-            <div className={styles.attribution}>
-              Source: {img.attribution}
-            </div>
-          </div>
+          <ImageWithFallback key={idx} src={img.url} alt="Related visualization" attribution={img.attribution} />
         ))}
       </div>
     </div>

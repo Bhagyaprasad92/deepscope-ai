@@ -7,7 +7,7 @@ interface Props {
   report: ResearchReport;
 }
 
-export function ExportMenu({ report }: Props) {
+export const ExportMenu: React.FC<Props> = ({ report }) => {
   const exportAsJSON = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(report, null, 2));
     const dlAnchorElem = document.createElement('a');
@@ -17,19 +17,19 @@ export function ExportMenu({ report }: Props) {
   };
 
   const exportAsMarkdown = () => {
-    const md = `# ${report.title}
+    const md = `# ${report?.title || 'Report'}
     
 ## Answer
-${report.answer}
+${report?.answer || 'No answer'}
 
-**Confidence**: ${report.confidence}%
-*${report.confidence_reason}*
+**Confidence**: ${report?.confidence || 0}%
+*${report?.confidence_reason || ''}*
 
 ## Key Findings
-${report.findings.map(f => `- ${f}`).join('\n')}
+${(report?.findings || []).map(f => `- ${f}`).join('\n')}
 
 ## Sources
-${report.references.map(r => `- [${r.title}](${r.url}) (${r.domain})`).join('\n')}
+${(report?.references || []).map(r => `- [${r.title || r.url}](${r.url}) (${r.domain || ''})`).join('\n')}
 `;
     const dataStr = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
     const dlAnchorElem = document.createElement('a');
@@ -52,13 +52,13 @@ ${report.references.map(r => `- [${r.title}](${r.url}) (${r.domain})`).join('\n'
       </h3>
       
       <div className={styles.buttonGroup}>
-        <button onClick={exportAsPDF} className={styles.btn}>
+        <button onClick={exportAsPDF} className={styles.btn} aria-label="Export report as PDF" title="Export as PDF">
           <FileText size={16} /> Save as PDF
         </button>
-        <button onClick={exportAsMarkdown} className={styles.btn}>
+        <button onClick={exportAsMarkdown} className={styles.btn} aria-label="Export report as Markdown" title="Export as Markdown">
           <FileText size={16} /> Markdown
         </button>
-        <button onClick={exportAsJSON} className={styles.btn}>
+        <button onClick={exportAsJSON} className={styles.btn} aria-label="Export report as JSON" title="Export as JSON">
           <FileJson size={16} /> JSON
         </button>
       </div>

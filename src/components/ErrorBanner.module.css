@@ -1,0 +1,31 @@
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: rgba(255, 0, 60, 0.1);
+  border: 1px solid var(--alert-critical);
+  padding: 1rem;
+  color: var(--text-primary);
+  margin-top: 2rem;
+  border-radius: 4px;
+}
+.icon {
+  color: var(--alert-critical);
+}
+.message {
+  flex-grow: 1;
+}
+.retryBtn {
+  background-color: transparent;
+  border: 1px solid var(--alert-critical);
+  color: var(--alert-critical);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.retryBtn:hover {
+  background-color: var(--alert-critical);
+  color: #fff;
+}

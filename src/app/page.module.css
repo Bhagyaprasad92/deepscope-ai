@@ -228,3 +228,39 @@
   color: var(--neon-cyan);
   font-weight: bold;
 }
+
+/* Responsive Media Queries */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .title {
+    font-size: 2.5rem;
+  }
+  
+  .searchBox {
+    flex-direction: column;
+    align-items: stretch;
+    clip-path: none;
+    border-radius: 8px;
+  }
+  
+  .searchButton {
+    clip-path: none;
+    justify-content: center;
+  }
+  
+  .searchInput {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+  
+  .resultsContainer {
+    gap: 1rem;
+  }
+}
+
