@@ -1,26 +1,171 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core HUD Colors */
+  --bg-base: #020205; /* Deepest space black */
+  --bg-hud: rgba(4, 15, 26, 0.7);
+  --bg-overlay: rgba(0, 255, 255, 0.03);
+  
+  --neon-cyan: #00f3ff;
+  --neon-blue: #0066ff;
+  --neon-purple: #bc13fe;
+  
+  --text-primary: #e0ffff;
+  --text-secondary: #00b3cc;
+  --text-dim: #005a70;
+  
+  --border-dim: rgba(0, 243, 255, 0.2);
+  --border-bright: rgba(0, 243, 255, 0.8);
+  
+  --alert-critical: #ff003c;
+  --alert-warn: #ffaa00;
+  --alert-safe: #00ff66;
+
+  /* Typography */
+  --font-hud-header: 'Orbitron', sans-serif;
+  --font-hud-body: 'Share Tech Mono', monospace;
+  
+  /* HUD Effects */
+  --glow-sm: 0 0 5px var(--neon-cyan);
+  --glow-md: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0, 243, 255, 0.4);
+  --glow-lg: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-blue), 0 0 45px rgba(0, 102, 255, 0.4);
+  --glow-critical: 0 0 10px var(--alert-critical), 0 0 20px rgba(255, 0, 60, 0.6);
+  
+  --hud-backdrop: blur(4px);
+  
+  /* Transition timings for robotic feel */
+  --trans-robotic: 0.1s steps(4, end);
+  --trans-smooth: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-hud-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background Cyber Grid */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: 
+    linear-gradient(var(--bg-overlay) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bg-overlay) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Scanline Effect */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 243, 255, 0.02) 51%
+  );
+  background-size: 100% 4px;
+  z-index: -1;
+  pointer-events: none;
+  animation: scanlines 10s linear infinite;
+}
+
+/* Base Utility Classes */
+.hud-panel {
+  background: var(--bg-hud);
+  backdrop-filter: var(--hud-backdrop);
+  -webkit-backdrop-filter: var(--hud-backdrop);
+  border: 1px solid var(--border-dim);
+  box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.05);
+  position: relative;
+  clip-path: polygon(
+    0 15px, 
+    15px 0, 
+    100% 0, 
+    100% calc(100% - 15px), 
+    calc(100% - 15px) 100%, 
+    0 100%
+  );
+}
+
+.hud-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+  opacity: 0.5;
+}
+
+.text-glow {
+  text-shadow: var(--glow-sm);
+}
+
+/* Animations */
+@keyframes scanlines {
+  from { background-position: 0 0; }
+  to { background-position: 0 100vh; }
+}
+
+@keyframes hudFadeIn {
+  0% { opacity: 0; transform: scale(0.98) translateY(10px); filter: blur(4px); }
+  50% { filter: blur(0px); opacity: 0.8; }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+}
+
+@keyframes dataPulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; text-shadow: var(--glow-md); }
+  100% { opacity: 0.7; }
+}
+
+@keyframes typingCursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-hud-in {
+  animation: hudFadeIn 0.5s ease-out forwards;
+}
+
+/* Custom Scrollbar for HUD */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-base);
+  border-left: 1px solid var(--border-dim);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-dim);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-cyan);
+  box-shadow: var(--glow-sm);
 }

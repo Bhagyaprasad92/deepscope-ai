@@ -1,0 +1,88 @@
+.container {
+  margin-top: 3rem;
+  animation: hudFadeIn 0.8s ease-out;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-hud-header);
+  font-size: 1.25rem;
+  color: var(--neon-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5rem;
+  text-shadow: var(--glow-sm);
+}
+
+.icon {
+  color: var(--neon-cyan);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.imageWrapper {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16/9;
+  background: var(--bg-hud);
+  border: 1px solid var(--border-dim);
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+.imageWrapper::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    transparent,
+    transparent 2px,
+    rgba(0, 243, 255, 0.1) 3px,
+    rgba(0, 243, 255, 0.1) 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: overlay;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.2) saturate(1.5) hue-rotate(-10deg);
+  opacity: 0.8;
+  transition: all var(--trans-smooth);
+}
+
+.imageWrapper:hover .image {
+  transform: scale(1.05);
+  filter: contrast(1.1) saturate(1) hue-rotate(0deg);
+  opacity: 1;
+}
+
+.attribution {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  border-top: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-family: var(--font-hud-body);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transform: translateY(100%);
+  transition: transform var(--trans-robotic);
+  z-index: 3;
+}
+
+.imageWrapper:hover .attribution {
+  transform: translateY(0);
+}
